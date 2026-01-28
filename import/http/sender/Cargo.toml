@@ -15,6 +15,9 @@ toml = { version = "0.9.11", default-features = false, features = ["serde", "par
 async-trait = { version = "0.1.89", default-features = false }
 tower = { version = "0.5.3", default-features = false, features = ["util"] }
 
+[dependencies.common]
+path = "../common"
+
 [dev-dependencies]
 autospy = { version = "1.6.1", default-features = false, features = ["async"]}
 

@@ -1,13 +1,14 @@
 use crate::config::Config;
-use crate::request::Request;
-use crate::udp::{SendRequest, UdpSender};
+use crate::send_request::SendRequest;
 use anyhow::Context;
 use axum::http::StatusCode;
+use common::request::Request;
+use common::udp::UdpSender;
 
 pub async fn run(config: &Config) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(config.listen_address).await?;
 
-    let udp_sender = UdpSender::try_new(config).await?;
+    let udp_sender = UdpSender::try_new(config.import_address).await?;
 
     axum::serve(listener, router(udp_sender).await)
         .await
@@ -30,7 +31,7 @@ async fn on_request_received<SR: SendRequest>(
     axum::extract::State(state): axum::extract::State<State<SR>>,
     request: Request,
 ) -> StatusCode {
-    match state.udp_sender.try_send_request_as_bytes(request).await {
+    match state.udp_sender.try_send_request(request).await {
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::BAD_GATEWAY,
     }
@@ -39,18 +40,18 @@ async fn on_request_received<SR: SendRequest>(
 #[cfg(test)]
 mod tests {
     use super::router;
-    use crate::udp::SendRequestSpy;
+    use crate::send_request::SendRequestSpy;
     use anyhow::anyhow;
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
     use tower::ServiceExt;
 
     #[tokio::test]
-    async fn failure_to_send_request_as_udp_returns_500() {
+    async fn failure_to_send_request_bytes_returns_500() {
         let send_request_spy = SendRequestSpy::default();
 
         send_request_spy
-            .try_send_request_as_bytes
+            .try_send_request
             .returns
             .set([Err(anyhow!("test error"))]);
 

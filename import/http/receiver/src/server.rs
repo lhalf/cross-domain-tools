@@ -1,0 +1,97 @@
+use crate::config::Config;
+use crate::send_request::{HTTPClient, SendRequest};
+use crate::send_response::SendResponse;
+use common::request::Request;
+use common::udp::UdpSender;
+
+// W6300-EVB-Pico2 max buffer size
+const BUFFER_SIZE: usize = 64 * 1024;
+
+pub async fn run(config: &Config) -> anyhow::Result<()> {
+    let listener = tokio::net::UdpSocket::bind(config.listen_address).await?;
+    let http_client = HTTPClient::try_new(config)?;
+    let udp_sender = UdpSender::try_new(config.export_address).await?;
+    let mut buffer = [0u8; BUFFER_SIZE];
+
+    loop {
+        let (len, _) = listener.recv_from(&mut buffer).await?;
+        // TODO: fix this shit
+        let data = buffer[..len].to_vec();
+        tokio::spawn(on_request_received(
+            data,
+            http_client.clone(),
+            udp_sender.clone(),
+        ));
+    }
+}
+
+async fn on_request_received<SRQ: SendRequest, SRP: SendResponse>(
+    received: Vec<u8>,
+    http_client: SRQ,
+    udp_sender: SRP,
+) -> anyhow::Result<()> {
+    let response = http_client
+        .try_send_request(postcard::from_bytes::<Request>(&received)?)
+        .await?;
+    udp_sender.try_send_response(response).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::on_request_received;
+    use crate::send_request::SendRequestSpy;
+    use crate::send_response::SendResponseSpy;
+    use anyhow::anyhow;
+    use common::response::Response;
+
+    #[tokio::test]
+    async fn receiving_invalid_request_bytes_returns_error() {
+        assert!(
+            on_request_received(
+                b"i am invalid".to_vec(),
+                SendRequestSpy::default(),
+                SendResponseSpy::default()
+            )
+            .await
+            .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn failure_to_send_request_returns_error() {
+        let send_request_spy = SendRequestSpy::default();
+
+        send_request_spy
+            .try_send_request
+            .returns
+            .set([Err(anyhow!("test error"))]);
+
+        assert!(
+            on_request_received(vec![0], send_request_spy, SendResponseSpy::default())
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn failure_to_send_response_bytes_returns_error() {
+        let send_request_spy = SendRequestSpy::default();
+        let send_response_spy = SendResponseSpy::default();
+
+        send_request_spy
+            .try_send_request
+            .returns
+            .set([Ok(Response::default())]);
+
+        send_response_spy
+            .try_send_response
+            .returns
+            .set([Err(anyhow!("test error"))]);
+
+        assert!(
+            on_request_received(vec![0], send_request_spy, send_response_spy)
+                .await
+                .is_err()
+        );
+    }
+}
