@@ -56,12 +56,8 @@ mod tests {
 
         let router = router(send_request_spy).await;
 
-        let response = router.oneshot(
-                Request::builder()
-                    .uri("/")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
+        let response = router
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
             .await
             .unwrap();
 
