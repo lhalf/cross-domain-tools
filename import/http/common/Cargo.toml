@@ -13,6 +13,10 @@ serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 axum = { version = "0.8.8", default-features = false, features = ["tokio", "http1"] }
 reqwest = { version = "0.13.1", default-features = false }
 anyhow = { version = "1.0.100", default-features = false }
+uuid = { version = "1.20.0", default-features = false, features = ["v4", "serde"] }
+async-trait = { version = "0.1.89", default-features = false }
+http-serde = { version = "2.1.1", default-features = false }
+autospy = { version = "1.6.1", default-features = false }
 
 [lints]
 workspace = true

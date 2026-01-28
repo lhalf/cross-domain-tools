@@ -4,10 +4,11 @@ use std::net::SocketAddrV4;
 
 const PATH: &str = "/etc/import-http/config.toml";
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Config {
     pub listen_address: SocketAddrV4,
     pub import_address: SocketAddrV4,
+    pub export_address: SocketAddrV4,
 }
 
 impl Config {

@@ -18,3 +18,17 @@ impl UdpSender {
         })
     }
 }
+
+#[autospy::autospy]
+#[async_trait::async_trait]
+pub trait SendBytes: Clone + Send + Sync + 'static {
+    async fn try_send_bytes(&self, bytes: &[u8]) -> anyhow::Result<()>;
+}
+
+#[async_trait::async_trait]
+impl SendBytes for UdpSender {
+    async fn try_send_bytes(&self, bytes: &[u8]) -> anyhow::Result<()> {
+        let _ = self.socket.send_to(bytes, self.address).await?;
+        Ok(())
+    }
+}

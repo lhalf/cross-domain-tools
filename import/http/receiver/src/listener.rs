@@ -1,17 +1,15 @@
 use crate::config::Config;
 use crate::send_request::{HTTPClient, SendRequest};
 use crate::send_response::SendResponse;
+use common::W6300_BUFFER_SIZE;
 use common::request::Request;
 use common::udp::UdpSender;
-
-// W6300-EVB-Pico2 max buffer size
-const BUFFER_SIZE: usize = 64 * 1024;
 
 pub async fn run(config: &Config) -> anyhow::Result<()> {
     let listener = tokio::net::UdpSocket::bind(config.listen_address).await?;
     let http_client = HTTPClient::try_new(config)?;
     let udp_sender = UdpSender::try_new(config.export_address).await?;
-    let mut buffer = [0u8; BUFFER_SIZE];
+    let mut buffer = [0u8; W6300_BUFFER_SIZE];
 
     loop {
         let (len, _) = listener.recv_from(&mut buffer).await?;
