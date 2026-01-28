@@ -5,9 +5,12 @@ edition = "2024"
 
 [dependencies]
 anyhow = { version = "1.0.100", default-features = false }
-tokio = { version = "1.49.0", default-features = false, features = ["macros", "rt-multi-thread"] }
+axum = { version = "0.8.8", default-features = false, features = ["tokio", "http1"] }
+tokio = { version = "1.49.0", default-features = false, features = ["macros", "rt-multi-thread", "net"] }
 log = { version = "0.4.29", default-features = false }
 env_logger = { version = "0.11.8", default-features = false }
+serde = { version = "1.0.228", default-features = false, features = ["derive"] }
+toml = { version = "0.9.11", default-features = false, features = ["serde", "parse"] }
 
 [lints]
 workspace = true
