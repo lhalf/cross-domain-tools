@@ -1,13 +1,13 @@
 use anyhow::Context;
 use serde::Deserialize;
-use std::net::Ipv4Addr;
+use std::net::SocketAddrV4;
 
 const PATH: &str = "/etc/import-http/config.toml";
 
 #[derive(Deserialize)]
 pub struct Config {
-    pub listen_address: Ipv4Addr,
-    pub listen_port: u16,
+    pub listen_address: SocketAddrV4,
+    pub import_address: SocketAddrV4,
 }
 
 impl Config {
