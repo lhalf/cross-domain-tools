@@ -19,7 +19,7 @@ impl UdpSender {
     }
 }
 
-#[autospy::autospy]
+#[cfg_attr(feature = "test", autospy::autospy)]
 #[async_trait::async_trait]
 pub trait SendBytes: Clone + Send + Sync + 'static {
     async fn try_send_bytes(&self, bytes: &[u8]) -> anyhow::Result<()>;
