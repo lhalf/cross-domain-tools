@@ -2,7 +2,6 @@ mod app;
 mod config;
 mod listener;
 mod send_request;
-mod send_response;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
