@@ -22,8 +22,5 @@ path = "../common"
 path = "../common"
 features = ["test"]
 
-[dev-dependencies]
-autospy = { version = "1.6.1", default-features = false, features = ["async"]}
-
 [lints]
 workspace = true

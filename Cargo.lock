@@ -524,7 +524,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "autospy",
  "axum",
  "common",
  "env_logger",
