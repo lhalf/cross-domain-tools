@@ -3,7 +3,7 @@ use serde::Deserialize;
 use std::net::SocketAddrV4;
 use std::time::Duration;
 
-const PATH: &str = "/etc/import-http/config.toml";
+const DEFAULT_PATH: &str = "/etc/import-http/config.toml";
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -14,6 +14,7 @@ pub struct Config {
 
 impl Config {
     pub fn try_load() -> anyhow::Result<Self> {
-        toml::from_str(&std::fs::read_to_string(PATH)?).context("failed to load config")
+        let path = std::env::var("CONFIG_PATH").unwrap_or(DEFAULT_PATH.to_string());
+        toml::from_str(&std::fs::read_to_string(path)?).context("failed to load config")
     }
 }
