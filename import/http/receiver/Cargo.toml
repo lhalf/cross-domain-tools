@@ -13,6 +13,7 @@ toml = { version = "0.9.11", default-features = false, features = ["serde", "par
 async-trait = { version = "0.1.89", default-features = false }
 reqwest = { version = "0.13.1", default-features = false }
 postcard = { version = "1.1.3", default-features = false, features = ["use-std"] }
+uuid = { version = "1.20.0", features = ["v4"] }
 
 [dependencies.common]
 path = "../common"

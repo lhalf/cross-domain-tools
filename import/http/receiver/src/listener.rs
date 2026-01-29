@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::send_request::{HTTPClient, SendRequest};
 use common::W6300_BUFFER_SIZE;
-use common::request::Request;
+use common::payload::{ExportPayload, ImportPayload};
 use common::udp::SendBytes;
 use common::udp::UdpSender;
 
@@ -15,6 +15,7 @@ pub async fn run(config: &Config) -> anyhow::Result<()> {
         let (len, _) = listener.recv_from(&mut buffer).await?;
         // TODO: fix this shit
         let data = buffer[..len].to_vec();
+
         tokio::spawn(on_request_received(
             data,
             http_client.clone(),
@@ -28,13 +29,18 @@ async fn on_request_received<SRQ: SendRequest, SB: SendBytes>(
     http_client: SRQ,
     udp_sender: SB,
 ) -> anyhow::Result<()> {
-    let response = http_client
-        .try_send_request(postcard::from_bytes::<Request>(&received)?)
-        .await?;
+    let import_payload: ImportPayload = postcard::from_bytes(&received)?;
 
-    let bytes = postcard::to_stdvec(&response)?;
+    let response = http_client.try_send_request(import_payload.request).await?;
 
-    udp_sender.try_send_bytes(&bytes).await
+    let export_payload = ExportPayload {
+        uuid: import_payload.uuid,
+        response,
+    };
+
+    udp_sender
+        .try_send_bytes(&postcard::to_stdvec(&export_payload)?)
+        .await
 }
 
 #[cfg(test)]
@@ -42,6 +48,7 @@ mod tests {
     use super::on_request_received;
     use crate::send_request::SendRequestSpy;
     use anyhow::anyhow;
+    use common::payload::ImportPayload;
     use common::response::Response;
     use common::udp::SendBytesSpy;
 
@@ -68,9 +75,13 @@ mod tests {
             .set([Err(anyhow!("test error"))]);
 
         assert!(
-            on_request_received(vec![0], send_request_spy, SendBytesSpy::default())
-                .await
-                .is_err()
+            on_request_received(
+                import_payload_bytes(),
+                send_request_spy,
+                SendBytesSpy::default()
+            )
+            .await
+            .is_err()
         );
     }
 
@@ -90,9 +101,13 @@ mod tests {
             .set([Err(anyhow!("test error"))]);
 
         assert!(
-            on_request_received(vec![0], send_request_spy, send_bytes_spy)
+            on_request_received(import_payload_bytes(), send_request_spy, send_bytes_spy)
                 .await
                 .is_err()
         );
+    }
+
+    fn import_payload_bytes() -> Vec<u8> {
+        postcard::to_stdvec(&ImportPayload::default()).unwrap()
     }
 }

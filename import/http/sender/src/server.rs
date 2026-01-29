@@ -1,53 +1,86 @@
 use crate::config::Config;
+use crate::responses::{RequestResponse, ResponseMap};
 use anyhow::Context;
 use axum::http::StatusCode;
+use common::payload::ImportPayload;
 use common::request::Request;
+use common::response::Response;
 use common::udp::{SendBytes, UdpSender};
+use std::time::Duration;
+use uuid::Uuid;
 
-pub async fn run(config: Config) -> anyhow::Result<()> {
+pub async fn run(config: Config, response_map: ResponseMap) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(config.listen_address).await?;
 
     let udp_sender = UdpSender::try_new(config.import_address).await?;
 
-    axum::serve(listener, router(udp_sender).await)
-        .await
-        .context("failed to run request server")
+    axum::serve(
+        listener,
+        router(udp_sender, response_map, config.timeout).await,
+    )
+    .await
+    .context("failed to run request server")
 }
 
 #[derive(Clone)]
-struct State<SB: SendBytes> {
+struct State<SB: SendBytes, RR: RequestResponse> {
     udp_sender: SB,
+    response_map: RR,
+    timeout: Duration,
 }
 
-async fn router<SB: SendBytes>(udp_sender: SB) -> axum::Router {
+async fn router<SB: SendBytes, RR: RequestResponse>(
+    udp_sender: SB,
+    response_map: RR,
+    timeout: Duration,
+) -> axum::Router {
     axum::Router::new().route(
         "/",
-        axum::routing::any(on_request_received::<SB>).with_state(State { udp_sender }),
+        axum::routing::any(on_request_received::<SB, RR>).with_state(State {
+            udp_sender,
+            response_map,
+            timeout,
+        }),
     )
 }
 
-async fn on_request_received<SB: SendBytes>(
-    axum::extract::State(state): axum::extract::State<State<SB>>,
+async fn on_request_received<SB: SendBytes, RR: RequestResponse>(
+    axum::extract::State(state): axum::extract::State<State<SB, RR>>,
     request: Request,
-) -> StatusCode {
-    let bytes = match postcard::to_stdvec(&request) {
+) -> Response {
+    let uuid = Uuid::new_v4();
+
+    let response_rx = state.response_map.request_response(uuid).await;
+
+    let bytes = match postcard::to_stdvec(&ImportPayload { uuid, request }) {
         Ok(bytes) => bytes,
-        Err(_) => return StatusCode::BAD_REQUEST,
+        Err(_) => return StatusCode::BAD_REQUEST.into(),
     };
 
-    match state.udp_sender.try_send_bytes(&bytes).await {
-        Ok(_) => StatusCode::OK,
-        Err(_) => StatusCode::BAD_GATEWAY,
+    if state.udp_sender.try_send_bytes(&bytes).await.is_err() {
+        state.response_map.remove_response(uuid).await;
+        return StatusCode::BAD_GATEWAY.into();
+    }
+
+    match tokio::time::timeout(state.timeout, response_rx).await {
+        Ok(Ok(response)) => response,
+        _ => {
+            state.response_map.remove_response(uuid).await;
+            StatusCode::GATEWAY_TIMEOUT.into()
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::router;
+    use crate::responses::RequestResponseSpy;
     use anyhow::anyhow;
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
     use common::udp::SendBytesSpy;
+    use std::time::Duration;
+    use tokio::sync::oneshot;
     use tower::ServiceExt;
 
     // TODO: can this be tested?
@@ -57,15 +90,21 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn failure_to_send_request_bytes_returns_500() {
+    async fn failure_to_send_request_bytes_returns_502_and_response_removed() {
+        let (_, response_rx) = oneshot::channel();
+
         let send_bytes_spy = SendBytesSpy::default();
+        let response_map_spy = RequestResponseSpy::default();
 
         send_bytes_spy
             .try_send_bytes
             .returns
             .set([Err(anyhow!("test error"))]);
 
-        let router = router(send_bytes_spy).await;
+        response_map_spy.request_response.returns.set([response_rx]);
+        response_map_spy.remove_response.returns.set([()]);
+
+        let router = router(send_bytes_spy, response_map_spy, Duration::ZERO).await;
 
         let response = router
             .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())

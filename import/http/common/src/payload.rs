@@ -3,20 +3,16 @@ use crate::response::Response;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+#[cfg_attr(feature = "test", derive(Default))]
 #[derive(Serialize, Deserialize)]
 pub struct ImportPayload {
-    uuid: Uuid,
-    request: Request,
+    pub uuid: Uuid,
+    pub request: Request,
 }
 
-impl ImportPayload {
-    pub fn new(uuid: Uuid, request: Request) -> Self {
-        Self { uuid, request }
-    }
-}
-
+#[cfg_attr(feature = "test", derive(Default))]
 #[derive(Serialize, Deserialize)]
 pub struct ExportPayload {
-    uuid: Uuid,
-    response: Response,
+    pub uuid: Uuid,
+    pub response: Response,
 }

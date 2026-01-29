@@ -1,4 +1,5 @@
 use axum::http::StatusCode;
+use axum::response::IntoResponse;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default)]
@@ -12,5 +13,17 @@ impl TryFrom<reqwest::Response> for Response {
 
     fn try_from(_value: reqwest::Response) -> anyhow::Result<Self> {
         Ok(Response::default())
+    }
+}
+
+impl From<StatusCode> for Response {
+    fn from(status_code: StatusCode) -> Self {
+        Response { status_code }
+    }
+}
+
+impl IntoResponse for Response {
+    fn into_response(self) -> axum::response::Response {
+        self.status_code.into_response()
     }
 }
