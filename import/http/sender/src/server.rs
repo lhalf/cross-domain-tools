@@ -78,6 +78,7 @@ mod tests {
     use anyhow::anyhow;
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
+    use common::response::Response;
     use common::udp::SendBytesSpy;
     use std::time::Duration;
     use tokio::sync::oneshot;
@@ -134,5 +135,27 @@ mod tests {
             .unwrap();
 
         assert_eq!(StatusCode::GATEWAY_TIMEOUT, response.status());
+    }
+    #[tokio::test]
+    async fn response_received_returns_response() {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        let send_bytes_spy = SendBytesSpy::default();
+        let response_map_spy = RequestResponseSpy::default();
+
+        send_bytes_spy.try_send_bytes.returns.set([Ok(())]);
+
+        response_map_spy.request_response.returns.set([response_rx]);
+
+        assert!(response_tx.send(Response::from(StatusCode::OK)).is_ok());
+
+        let router = router(send_bytes_spy, response_map_spy, Duration::ZERO).await;
+
+        let response = router
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(StatusCode::OK, response.status());
     }
 }
