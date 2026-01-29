@@ -22,9 +22,13 @@ async fn on_response_received<RR: ReceiveResponse>(
     response_map: RR,
 ) -> anyhow::Result<()> {
     let export_payload: ExportPayload = postcard::from_bytes(&received)?;
+
+    log::debug!("received bytes: {:?}", export_payload.uuid);
+
     response_map
         .receive_response(export_payload.uuid, export_payload.response)
         .await;
+
     Ok(())
 }
 

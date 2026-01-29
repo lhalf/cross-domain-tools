@@ -16,7 +16,12 @@ pub async fn run(config: Config, response_map: ResponseMap) -> anyhow::Result<()
 
     axum::serve(
         listener,
-        router(udp_sender, response_map, config.timeout).await,
+        router(
+            udp_sender,
+            response_map,
+            Duration::from_secs(config.timeout),
+        )
+        .await,
     )
     .await
     .context("failed to run request server")
@@ -50,6 +55,8 @@ async fn on_request_received<SB: SendBytes, RR: RequestResponse>(
 ) -> Response {
     let uuid = Uuid::new_v4();
 
+    log::debug!("received request: {:?}", uuid);
+
     let response_rx = state.response_map.request_response(uuid).await;
 
     let bytes = match postcard::to_stdvec(&ImportPayload { uuid, request }) {
@@ -63,7 +70,10 @@ async fn on_request_received<SB: SendBytes, RR: RequestResponse>(
     }
 
     match tokio::time::timeout(state.timeout, response_rx).await {
-        Ok(Ok(response)) => response,
+        Ok(Ok(response)) => {
+            log::debug!("responding response: {:?}", uuid);
+            response
+        }
         _ => {
             state.response_map.remove_response(uuid).await;
             StatusCode::GATEWAY_TIMEOUT.into()

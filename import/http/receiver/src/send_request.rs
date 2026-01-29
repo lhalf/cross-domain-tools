@@ -1,6 +1,7 @@
 use crate::config::Config;
 use common::request::Request;
 use common::response::Response;
+use std::time::Duration;
 
 #[derive(Clone)]
 pub struct HTTPClient {
@@ -11,7 +12,7 @@ impl HTTPClient {
     pub fn try_new(config: &Config) -> anyhow::Result<Self> {
         Ok(Self {
             client: reqwest::ClientBuilder::new()
-                .timeout(config.timeout)
+                .timeout(Duration::from_secs(config.timeout))
                 .build()?,
         })
     }

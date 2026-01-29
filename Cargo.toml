@@ -1,5 +1,5 @@
 [workspace]
-members = ["import/http/receiver", "import/http/sender", "import/http/common"]
+members = ["import/http/receiver", "import/http/sender", "import/http/common", "import/http/tests"]
 resolver = "3"
 
 [workspace.lints.rust]

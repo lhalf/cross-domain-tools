@@ -4,5 +4,13 @@ check:
     cargo fmt --check --all
     cargo clippy --bins --all-features -- -Dwarnings
 
-test:
-    cargo test
+test: unit-test integration-test
+
+unit-test:
+    cargo test --locked --workspace --exclude tests
+
+integration-test: build
+    cargo test --locked --lib integration --workspace --exclude common
+
+build:
+    cargo build --release --workspace --exclude common --exclude tests

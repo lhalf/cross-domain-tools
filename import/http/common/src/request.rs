@@ -28,9 +28,10 @@ impl TryFrom<Request> for reqwest::Request {
     type Error = anyhow::Error;
 
     fn try_from(_value: Request) -> anyhow::Result<Self> {
+        // TODO: make the target destination a config variable
         Ok(Self::new(
             reqwest::Method::GET,
-            Url::parse("https://localhost")?,
+            Url::parse("http://localhost:9002/")?,
         ))
     }
 }

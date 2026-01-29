@@ -1,15 +1,14 @@
 use anyhow::Context;
 use serde::Deserialize;
 use std::net::SocketAddrV4;
-use std::time::Duration;
 
 const DEFAULT_PATH: &str = "/etc/import-http/config.toml";
 
 #[derive(Deserialize)]
 pub struct Config {
-    pub listen_address: SocketAddrV4,
+    pub import_address: SocketAddrV4,
     pub export_address: SocketAddrV4,
-    pub timeout: Duration,
+    pub timeout: u64,
 }
 
 impl Config {

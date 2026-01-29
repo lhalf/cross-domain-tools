@@ -6,7 +6,7 @@ use common::udp::SendBytes;
 use common::udp::UdpSender;
 
 pub async fn run(config: &Config) -> anyhow::Result<()> {
-    let listener = tokio::net::UdpSocket::bind(config.listen_address).await?;
+    let listener = tokio::net::UdpSocket::bind(config.import_address).await?;
     let http_client = HTTPClient::try_new(config)?;
     let udp_sender = UdpSender::try_new(config.export_address).await?;
     let mut buffer = [0u8; W6300_BUFFER_SIZE];
@@ -31,12 +31,16 @@ async fn on_request_received<SRQ: SendRequest, SB: SendBytes>(
 ) -> anyhow::Result<()> {
     let import_payload: ImportPayload = postcard::from_bytes(&received)?;
 
+    log::debug!("received bytes: {:?}", import_payload.uuid);
+
     let response = http_client.try_send_request(import_payload.request).await?;
 
     let export_payload = ExportPayload {
         uuid: import_payload.uuid,
         response,
     };
+
+    log::debug!("responding bytes: {:?}", import_payload.uuid);
 
     udp_sender
         .try_send_bytes(&postcard::to_stdvec(&export_payload)?)
