@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn failure_to_send_request_bytes_returns_502_and_response_removed() {
+    async fn failure_to_send_import_bytes_returns_502_and_response_removed() {
         let (_, response_rx) = oneshot::channel();
 
         let send_bytes_spy = SendBytesSpy::default();
@@ -112,5 +112,27 @@ mod tests {
             .unwrap();
 
         assert_eq!(StatusCode::BAD_GATEWAY, response.status());
+    }
+
+    #[tokio::test]
+    async fn timeout_waiting_for_response_returns_504_and_response_removed() {
+        let (_, response_rx) = oneshot::channel();
+
+        let send_bytes_spy = SendBytesSpy::default();
+        let response_map_spy = RequestResponseSpy::default();
+
+        send_bytes_spy.try_send_bytes.returns.set([Ok(())]);
+
+        response_map_spy.request_response.returns.set([response_rx]);
+        response_map_spy.remove_response.returns.set([()]);
+
+        let router = router(send_bytes_spy, response_map_spy, Duration::ZERO).await;
+
+        let response = router
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(StatusCode::GATEWAY_TIMEOUT, response.status());
     }
 }
