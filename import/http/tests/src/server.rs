@@ -64,7 +64,7 @@ impl Server {
         self.received_requests.lock().unwrap()
     }
 
-    fn stop(&mut self) {
+    pub fn stop(&mut self) {
         if let Some(stop_tx) = self.stop_tx.take() {
             stop_tx.send(()).unwrap();
         }

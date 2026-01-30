@@ -5,7 +5,7 @@ use parameterized::parameterized;
 use reqwest::StatusCode;
 use std::time::Duration;
 
-const TIMEOUT: Duration = Duration::from_secs(1);
+const TIMEOUT: Duration = Duration::from_secs(2);
 
 #[parameterized(method = {
     Method::GET,
@@ -28,6 +28,22 @@ fn proxy_method(method: Method) {
 
     assert_eq!(1, system.server.received_requests().len());
     assert_eq!(method, system.server.received_requests()[0].method());
+}
+
+#[test]
+fn target_unavailable_returns_504() {
+    let mut system = System::start();
+
+    system.server.stop();
+
+    let response = client()
+        .get(format!("http://{SENDER_ADDRESS}/"))
+        .send()
+        .unwrap();
+
+    assert_eq!(StatusCode::GATEWAY_TIMEOUT, response.status());
+
+    assert!(system.server.received_requests().is_empty());
 }
 
 fn client() -> reqwest::blocking::Client {
