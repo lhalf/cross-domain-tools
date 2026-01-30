@@ -12,20 +12,20 @@ const RECEIVER_CONFIG_PATH: &str = "../../../import/http/tests/config/receiver.t
 pub struct System {
     sender: Option<Child>,
     receiver: Option<Child>,
-    _server: Server,
+    pub server: Server,
 }
 
 impl System {
     pub fn start() -> Self {
         let sender = Some(Self::spawn_process(SENDER_PATH, SENDER_CONFIG_PATH));
         let receiver = Some(Self::spawn_process(RECEIVER_PATH, RECEIVER_CONFIG_PATH));
-        let _server = Server::spawn();
+        let server = Server::spawn();
 
         Self::wait_for_ready();
         Self {
             sender,
             receiver,
-            _server,
+            server,
         }
     }
 

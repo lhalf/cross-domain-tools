@@ -1,3 +1,4 @@
+use crate::method::Method;
 use axum::http::StatusCode;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
@@ -7,30 +8,29 @@ pub struct Request {
     pub method: Method,
 }
 
-#[derive(Serialize, Deserialize, Default)]
-pub enum Method {
-    #[default]
-    Get,
-}
-
 impl<S: Sync> axum::extract::FromRequest<S> for Request {
     type Rejection = StatusCode;
 
     async fn from_request(
-        _request: axum::extract::Request,
+        request: axum::extract::Request,
         _state: &S,
     ) -> Result<Self, Self::Rejection> {
-        Ok(Request::default())
+        Ok(Request {
+            method: request
+                .method()
+                .try_into()
+                .map_err(|_| StatusCode::METHOD_NOT_ALLOWED)?,
+        })
     }
 }
 
 impl TryFrom<Request> for reqwest::Request {
     type Error = anyhow::Error;
 
-    fn try_from(_value: Request) -> anyhow::Result<Self> {
+    fn try_from(request: Request) -> anyhow::Result<Self> {
         // TODO: make the target destination a config variable
         Ok(Self::new(
-            reqwest::Method::GET,
+            request.method.into(),
             Url::parse("http://localhost:9002/")?,
         ))
     }

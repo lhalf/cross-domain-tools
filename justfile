@@ -10,7 +10,7 @@ unit-test:
     cargo test --locked --workspace --exclude tests
 
 integration-test: build
-    cargo test --locked --lib integration --workspace --exclude common
+    cargo test --locked --lib integration --workspace --exclude common -- --test-threads 1
 
 build:
     cargo build --release --workspace --exclude common --exclude tests

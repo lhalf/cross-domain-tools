@@ -8,6 +8,7 @@ reqwest = { version = "0.13.1", default-features = false, features = ["blocking"
 axum = { version = "0.8.8", default-features = false }
 tokio = { version = "1.49.0", default-features = false }
 retry = { version = "2.1.0", default-features = false }
+parameterized = { version = "2.1.0", default-features = false }
 
 [lib]
 doctest = false
