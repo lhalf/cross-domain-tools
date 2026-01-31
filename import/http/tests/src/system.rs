@@ -61,9 +61,9 @@ impl Drop for System {
 fn begone_child(name: &'static str, mut child: Child) {
     child.kill().unwrap();
     let output = child.wait_with_output().unwrap();
-    println!(
-        "{} stdout:\n{}",
+    print!(
+        "---- {} stderr ----\n{}",
         name,
-        String::from_utf8_lossy(&output.stdout)
+        String::from_utf8_lossy(&output.stderr)
     );
 }
