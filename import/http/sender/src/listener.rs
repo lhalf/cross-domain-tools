@@ -6,6 +6,7 @@ use common::payload::ExportPayload;
 pub async fn run(config: Config, response_map: ResponseMap) -> anyhow::Result<()> {
     let listener = tokio::net::UdpSocket::bind(config.export_address).await?;
 
+    #[allow(clippy::large_stack_arrays)]
     let mut buffer = [0u8; W6300_BUFFER_SIZE];
 
     loop {

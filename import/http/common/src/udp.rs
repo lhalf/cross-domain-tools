@@ -11,6 +11,7 @@ pub struct UdpSender {
 }
 
 impl UdpSender {
+    #[allow(clippy::missing_errors_doc)]
     pub async fn try_new(address: SocketAddrV4) -> anyhow::Result<Self> {
         Ok(Self {
             socket: Arc::new(UdpSocket::bind(ADDRESS).await?),

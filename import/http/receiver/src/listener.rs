@@ -9,6 +9,8 @@ pub async fn run(config: &Config) -> anyhow::Result<()> {
     let listener = tokio::net::UdpSocket::bind(config.import_address).await?;
     let http_client = HTTPClient::try_new(config)?;
     let udp_sender = UdpSender::try_new(config.export_address).await?;
+
+    #[allow(clippy::large_stack_arrays)]
     let mut buffer = [0u8; W6300_BUFFER_SIZE];
 
     loop {

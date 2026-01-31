@@ -27,13 +27,13 @@ impl Server {
         Self {
             stop_tx: Some(stop_tx),
             handle: Some(std::thread::spawn(move || {
-                Self::serve(stop_rx, received_requests_clone)
+                Self::serve(stop_rx, &received_requests_clone);
             })),
             received_requests,
         }
     }
 
-    fn serve(stop_rx: oneshot::Receiver<()>, received_requests: Arc<Mutex<Vec<Request>>>) {
+    fn serve(stop_rx: oneshot::Receiver<()>, received_requests: &Arc<Mutex<Vec<Request>>>) {
         Runtime::new().unwrap().block_on(async {
             let listener = tokio::net::TcpListener::bind(ADDRESS).await.unwrap();
 
@@ -42,22 +42,23 @@ impl Server {
                     stop_rx.await.ok();
                 })
                 .await
-                .unwrap()
-        })
+                .unwrap();
+        });
     }
 
-    fn router(received_requests: Arc<Mutex<Vec<Request>>>) -> Router {
+    fn router(received_requests: &Arc<Mutex<Vec<Request>>>) -> Router {
         Router::new().route("/is_ready", get(|| async {})).route(
             "/{*path}",
             any(Self::default_endpoint).with_state(received_requests.clone()),
         )
     }
 
+    #[allow(clippy::unused_async)]
     async fn default_endpoint(
         State(received_requests): State<Arc<Mutex<Vec<Request>>>>,
         request: Request,
     ) {
-        received_requests.lock().unwrap().push(request)
+        received_requests.lock().unwrap().push(request);
     }
 
     pub fn received_requests(&self) -> MutexGuard<'_, Vec<Request>> {
@@ -71,7 +72,7 @@ impl Server {
         if let Some(handle) = self.handle.take() {
             let _ = handle.join();
         }
-        Self::wait_for_stop()
+        Self::wait_for_stop();
     }
 
     fn wait_for_stop() {

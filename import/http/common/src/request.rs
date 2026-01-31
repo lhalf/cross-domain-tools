@@ -18,7 +18,7 @@ impl<S: Sync> axum::extract::FromRequest<S> for Request {
         request: axum::extract::Request,
         _state: &S,
     ) -> Result<Self, Self::Rejection> {
-        Ok(Request {
+        Ok(Self {
             method: request.method().clone(),
             path: request.uri().path().to_string(),
             headers: request.headers().clone(),
@@ -29,15 +29,15 @@ impl<S: Sync> axum::extract::FromRequest<S> for Request {
 impl TryFrom<Request> for reqwest::Request {
     type Error = anyhow::Error;
 
-    fn try_from(request: Request) -> anyhow::Result<Self> {
+    fn try_from(request_in: Request) -> anyhow::Result<Self> {
         // TODO: make the target destination a config variable
-        let mut reqwest = Self::new(
-            request.method,
-            Url::parse(&format!("http://localhost:9002{}", request.path))?,
+        let mut request_out = Self::new(
+            request_in.method,
+            Url::parse(&format!("http://localhost:9002{}", request_in.path))?,
         );
 
-        *reqwest.headers_mut() = request.headers;
+        *request_out.headers_mut() = request_in.headers;
 
-        Ok(reqwest)
+        Ok(request_out)
     }
 }

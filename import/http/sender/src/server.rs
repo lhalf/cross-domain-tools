@@ -34,6 +34,7 @@ struct State<SB: SendBytes, RR: RequestResponse> {
     timeout: Duration,
 }
 
+#[allow(clippy::unused_async)]
 async fn router<SB: SendBytes, RR: RequestResponse>(
     udp_sender: SB,
     response_map: RR,
@@ -55,13 +56,12 @@ async fn on_request_received<SB: SendBytes, RR: RequestResponse>(
 ) -> Response {
     let uuid = Uuid::new_v4();
 
-    log::debug!("received request: {:?}", uuid);
+    log::debug!("received request: {uuid}");
 
     let response_rx = state.response_map.request_response(uuid).await;
 
-    let bytes = match postcard::to_stdvec(&ImportPayload { uuid, request }) {
-        Ok(bytes) => bytes,
-        Err(_) => return StatusCode::BAD_REQUEST.into(),
+    let Ok(bytes) = postcard::to_stdvec(&ImportPayload { uuid, request }) else {
+        return StatusCode::BAD_REQUEST.into();
     };
 
     if state.udp_sender.try_send_bytes(&bytes).await.is_err() {
@@ -69,17 +69,14 @@ async fn on_request_received<SB: SendBytes, RR: RequestResponse>(
         return StatusCode::BAD_GATEWAY.into();
     }
 
-    log::debug!("waiting for response: {:?}", uuid);
+    log::debug!("waiting for response: {uuid}");
 
-    match tokio::time::timeout(state.timeout, response_rx).await {
-        Ok(Ok(response)) => {
-            log::debug!("got response: {:?}", uuid);
-            response
-        }
-        _ => {
-            state.response_map.remove_response(uuid).await;
-            StatusCode::GATEWAY_TIMEOUT.into()
-        }
+    if let Ok(Ok(response)) = tokio::time::timeout(state.timeout, response_rx).await {
+        log::debug!("got response: {uuid}");
+        response
+    } else {
+        state.response_map.remove_response(uuid).await;
+        StatusCode::GATEWAY_TIMEOUT.into()
     }
 }
 
@@ -98,9 +95,7 @@ mod tests {
 
     // TODO: can this be tested?
     #[tokio::test]
-    async fn receiving_invalid_request_returns_400() {
-        assert!(true)
-    }
+    async fn receiving_invalid_request_returns_400() {}
 
     #[tokio::test]
     async fn failure_to_send_import_bytes_returns_502_and_response_removed() {

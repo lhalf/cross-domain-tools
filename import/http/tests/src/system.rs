@@ -2,7 +2,7 @@ use crate::integration::client;
 use crate::server::Server;
 use std::process::{Child, Command, Stdio};
 
-pub const SENDER_ADDRESS: &'static str = "localhost:9000";
+pub const SENDER_ADDRESS: &str = "localhost:9000";
 const SENDER_PATH: &str = "../../../target/release/import-http-sender";
 const SENDER_CONFIG_PATH: &str = "../../../import/http/tests/config/sender.toml";
 
@@ -43,7 +43,7 @@ impl System {
         let client = client();
         retry::retry(retry::delay::Fixed::from_millis(100).take(10), || {
             client
-                .get(&format!("http://{SENDER_ADDRESS}/is_ready"))
+                .get(format!("http://{SENDER_ADDRESS}/is_ready"))
                 .send()?
                 .error_for_status()
         })

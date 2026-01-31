@@ -36,7 +36,8 @@ pub trait ReceiveResponse: Clone + Send + Sync + 'static {
 #[async_trait::async_trait]
 impl ReceiveResponse for ResponseMap {
     async fn receive_response(&self, uuid: Uuid, response: Response) {
-        if let Some(sender) = self.lock().await.remove(&uuid) {
+        let entry = self.lock().await.remove(&uuid);
+        if let Some(sender) = entry {
             let _ = sender.send(response);
         }
     }

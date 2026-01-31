@@ -4,6 +4,9 @@ check:
     cargo fmt --check --all
     cargo clippy --bins --all-features -- -Dwarnings
 
+check-strict:
+    cargo clippy --all-targets --all-features -- -D clippy::pedantic -D clippy::nursery
+
 test: unit-test integration-test
 
 unit-test:

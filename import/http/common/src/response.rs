@@ -12,13 +12,13 @@ impl TryFrom<reqwest::Response> for Response {
     type Error = anyhow::Error;
 
     fn try_from(_value: reqwest::Response) -> anyhow::Result<Self> {
-        Ok(Response::default())
+        Ok(Self::default())
     }
 }
 
 impl From<StatusCode> for Response {
     fn from(status_code: StatusCode) -> Self {
-        Response { status_code }
+        Self { status_code }
     }
 }
 
