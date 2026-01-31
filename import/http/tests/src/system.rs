@@ -1,5 +1,5 @@
+use crate::integration::client;
 use crate::server::Server;
-use std::net::TcpStream;
 use std::process::{Child, Command, Stdio};
 
 pub const SENDER_ADDRESS: &'static str = "localhost:9000";
@@ -40,10 +40,14 @@ impl System {
     }
 
     fn wait_for_ready() {
+        let client = client();
         retry::retry(retry::delay::Fixed::from_millis(100).take(10), || {
-            TcpStream::connect(SENDER_ADDRESS).map(|_| ())
+            client
+                .get(&format!("http://{SENDER_ADDRESS}/is_ready"))
+                .send()?
+                .error_for_status()
         })
-        .unwrap()
+        .unwrap();
     }
 }
 

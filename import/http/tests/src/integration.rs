@@ -20,7 +20,7 @@ fn proxy_method(method: Method) {
     let system = System::start();
 
     let response = client()
-        .request(method.clone(), format!("http://{SENDER_ADDRESS}/"))
+        .request(method.clone(), format!("http://{SENDER_ADDRESS}/path"))
         .send()
         .unwrap();
 
@@ -37,7 +37,7 @@ fn target_unavailable_returns_504() {
     system.server.stop();
 
     let response = client()
-        .get(format!("http://{SENDER_ADDRESS}/"))
+        .get(format!("http://{SENDER_ADDRESS}/path"))
         .send()
         .unwrap();
 
@@ -46,7 +46,22 @@ fn target_unavailable_returns_504() {
     assert!(system.server.received_requests().is_empty());
 }
 
-fn client() -> reqwest::blocking::Client {
+#[test]
+fn proxy_path() {
+    let system = System::start();
+
+    let response = client()
+        .get(format!("http://{SENDER_ADDRESS}/path"))
+        .send()
+        .unwrap();
+
+    assert_eq!(StatusCode::OK, response.status());
+
+    assert_eq!(1, system.server.received_requests().len());
+    assert_eq!("/path", system.server.received_requests()[0].uri().path());
+}
+
+pub fn client() -> reqwest::blocking::Client {
     reqwest::blocking::ClientBuilder::new()
         .timeout(TIMEOUT)
         .build()

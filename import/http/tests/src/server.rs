@@ -1,7 +1,7 @@
 use axum::Router;
 use axum::extract::Request;
 use axum::extract::State;
-use axum::routing::any;
+use axum::routing::{any, get};
 use std::net::TcpStream;
 use std::sync::Mutex;
 use std::sync::{Arc, MutexGuard};
@@ -47,8 +47,8 @@ impl Server {
     }
 
     fn router(received_requests: Arc<Mutex<Vec<Request>>>) -> Router {
-        Router::new().route(
-            "/",
+        Router::new().route("/is_ready", get(|| async {})).route(
+            "/{*path}",
             any(Self::default_endpoint).with_state(received_requests.clone()),
         )
     }

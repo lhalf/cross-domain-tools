@@ -40,7 +40,7 @@ async fn router<SB: SendBytes, RR: RequestResponse>(
     timeout: Duration,
 ) -> axum::Router {
     axum::Router::new().route(
-        "/",
+        "/{*path}",
         axum::routing::any(on_request_received::<SB, RR>).with_state(State {
             udp_sender,
             response_map,
@@ -115,7 +115,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(Method::CONNECT)
-                    .uri("/")
+                    .uri("/path")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -143,7 +143,7 @@ mod tests {
         let router = router(send_bytes_spy, response_map_spy, Duration::ZERO).await;
 
         let response = router
-            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .oneshot(Request::builder().uri("/path").body(Body::empty()).unwrap())
             .await
             .unwrap();
 
@@ -165,7 +165,7 @@ mod tests {
         let router = router(send_bytes_spy, response_map_spy, Duration::ZERO).await;
 
         let response = router
-            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .oneshot(Request::builder().uri("/path").body(Body::empty()).unwrap())
             .await
             .unwrap();
 
@@ -187,7 +187,7 @@ mod tests {
         let router = router(send_bytes_spy, response_map_spy, Duration::ZERO).await;
 
         let response = router
-            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .oneshot(Request::builder().uri("/path").body(Body::empty()).unwrap())
             .await
             .unwrap();
 
