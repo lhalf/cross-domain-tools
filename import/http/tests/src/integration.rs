@@ -51,14 +51,17 @@ fn proxy_path() {
     let system = System::start();
 
     let response = client()
-        .get(format!("http://{SENDER_ADDRESS}/path"))
+        .get(format!("http://{SENDER_ADDRESS}/another/path"))
         .send()
         .unwrap();
 
     assert_eq!(StatusCode::OK, response.status());
 
     assert_eq!(1, system.server.received_requests().len());
-    assert_eq!("/path", system.server.received_requests()[0].uri().path());
+    assert_eq!(
+        "/another/path",
+        system.server.received_requests()[0].uri().path()
+    );
 }
 
 pub fn client() -> reqwest::blocking::Client {
