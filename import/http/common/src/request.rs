@@ -1,12 +1,14 @@
-use crate::method::Method;
-use axum::http::StatusCode;
+use axum::http::{HeaderMap, Method, StatusCode};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Request {
+    #[serde(with = "http_serde::method")]
     pub method: Method,
     pub path: String,
+    #[serde(with = "http_serde::header_map")]
+    pub headers: HeaderMap,
 }
 
 impl<S: Sync> axum::extract::FromRequest<S> for Request {
@@ -17,11 +19,9 @@ impl<S: Sync> axum::extract::FromRequest<S> for Request {
         _state: &S,
     ) -> Result<Self, Self::Rejection> {
         Ok(Request {
-            method: request
-                .method()
-                .try_into()
-                .map_err(|_| StatusCode::METHOD_NOT_ALLOWED)?,
+            method: request.method().clone(),
             path: request.uri().path().to_string(),
+            headers: request.headers().clone(),
         })
     }
 }
@@ -31,9 +31,13 @@ impl TryFrom<Request> for reqwest::Request {
 
     fn try_from(request: Request) -> anyhow::Result<Self> {
         // TODO: make the target destination a config variable
-        Ok(Self::new(
-            request.method.into(),
+        let mut reqwest = Self::new(
+            request.method,
             Url::parse(&format!("http://localhost:9002{}", request.path))?,
-        ))
+        );
+
+        *reqwest.headers_mut() = request.headers;
+
+        Ok(reqwest)
     }
 }

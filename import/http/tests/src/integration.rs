@@ -64,6 +64,25 @@ fn proxy_path() {
     );
 }
 
+#[test]
+fn proxy_headers() {
+    let system = System::start();
+
+    let response = client()
+        .get(format!("http://{SENDER_ADDRESS}/path"))
+        .header("x-foo", "bar")
+        .send()
+        .unwrap();
+
+    assert_eq!(StatusCode::OK, response.status());
+
+    assert_eq!(1, system.server.received_requests().len());
+    assert_eq!(
+        "bar",
+        system.server.received_requests()[0].headers()["x-foo"]
+    );
+}
+
 pub fn client() -> reqwest::blocking::Client {
     reqwest::blocking::ClientBuilder::new()
         .timeout(TIMEOUT)

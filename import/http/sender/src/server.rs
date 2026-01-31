@@ -89,7 +89,7 @@ mod tests {
     use crate::responses::RequestResponseSpy;
     use anyhow::anyhow;
     use axum::body::Body;
-    use axum::http::{Method, Request, StatusCode};
+    use axum::http::{Request, StatusCode};
     use common::response::Response;
     use common::udp::SendBytesSpy;
     use std::time::Duration;
@@ -100,29 +100,6 @@ mod tests {
     #[tokio::test]
     async fn receiving_invalid_request_returns_400() {
         assert!(true)
-    }
-
-    #[tokio::test]
-    async fn unsupported_method_returns_405() {
-        let router = router(
-            SendBytesSpy::default(),
-            RequestResponseSpy::default(),
-            Duration::ZERO,
-        )
-        .await;
-
-        let response = router
-            .oneshot(
-                Request::builder()
-                    .method(Method::CONNECT)
-                    .uri("/path")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        assert_eq!(StatusCode::METHOD_NOT_ALLOWED, response.status());
     }
 
     #[tokio::test]
