@@ -7,6 +7,18 @@ use std::time::Duration;
 
 const TIMEOUT: Duration = Duration::from_secs(2);
 
+#[test]
+fn proxy_response() {
+    let _system = System::start();
+
+    let response = client()
+        .get(format!("http://{SENDER_ADDRESS}/teapot"))
+        .send()
+        .unwrap();
+
+    assert_eq!(StatusCode::IM_A_TEAPOT, response.status());
+}
+
 #[parameterized(method = {
     Method::GET,
     Method::POST,

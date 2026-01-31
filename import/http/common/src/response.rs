@@ -11,8 +11,10 @@ pub struct Response {
 impl TryFrom<reqwest::Response> for Response {
     type Error = anyhow::Error;
 
-    fn try_from(_value: reqwest::Response) -> anyhow::Result<Self> {
-        Ok(Self::default())
+    fn try_from(response: reqwest::Response) -> anyhow::Result<Self> {
+        Ok(Self {
+            status_code: response.status(),
+        })
     }
 }
 

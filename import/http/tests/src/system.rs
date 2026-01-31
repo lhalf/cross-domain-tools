@@ -66,7 +66,7 @@ fn begone_child(name: &'static str, mut child: Child) {
     child.kill().unwrap();
     let output = child.wait_with_output().unwrap();
     print!(
-        "---- {} stderr ----\n{}",
+        "\n---- {} stderr ----\n\n{}",
         name,
         String::from_utf8_lossy(&output.stderr)
     );
