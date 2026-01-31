@@ -9,7 +9,7 @@ use std::thread::JoinHandle;
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot;
 
-const ADDRESS: &str = "0.0.0.0:9002";
+const ADDRESS: &str = "127.0.0.1:9002";
 
 pub struct Server {
     stop_tx: Option<oneshot::Sender<()>>,

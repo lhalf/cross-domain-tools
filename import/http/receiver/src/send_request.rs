@@ -12,7 +12,7 @@ impl HTTPClient {
     pub fn try_new(config: &Config) -> anyhow::Result<Self> {
         Ok(Self {
             client: reqwest::ClientBuilder::new()
-                .timeout(Duration::from_secs(config.timeout))
+                .timeout(Duration::from_secs_f64(config.timeout))
                 .build()?,
         })
     }

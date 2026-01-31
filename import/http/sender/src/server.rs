@@ -19,7 +19,7 @@ pub async fn run(config: Config, response_map: ResponseMap) -> anyhow::Result<()
         router(
             udp_sender,
             response_map,
-            Duration::from_secs(config.timeout),
+            Duration::from_secs_f64(config.timeout),
         )
         .await,
     )
@@ -69,9 +69,11 @@ async fn on_request_received<SB: SendBytes, RR: RequestResponse>(
         return StatusCode::BAD_GATEWAY.into();
     }
 
+    log::debug!("waiting for response: {:?}", uuid);
+
     match tokio::time::timeout(state.timeout, response_rx).await {
         Ok(Ok(response)) => {
-            log::debug!("responding response: {:?}", uuid);
+            log::debug!("got response: {:?}", uuid);
             response
         }
         _ => {

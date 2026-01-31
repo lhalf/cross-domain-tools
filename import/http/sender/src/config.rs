@@ -9,7 +9,7 @@ pub struct Config {
     pub listen_address: SocketAddrV4,
     pub import_address: SocketAddrV4,
     pub export_address: SocketAddrV4,
-    pub timeout: u64,
+    pub timeout: f64,
 }
 
 impl Config {

@@ -2,4 +2,4 @@ listen_address = "0.0.0.0:9000"
 import_address = "0.0.0.0:9001"
 # target_address = "0.0.0.0:9002"
 export_address = "0.0.0.0:9003"
-timeout = 1
+timeout = 0.5
