@@ -1,6 +1,7 @@
 use axum::http::{HeaderMap, Method, StatusCode};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddrV4;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Request {
@@ -28,17 +29,14 @@ impl<S: Sync> axum::extract::FromRequest<S> for Request {
     }
 }
 
-impl TryFrom<Request> for reqwest::Request {
-    type Error = anyhow::Error;
+impl Request {
+    pub fn try_to_reqwest(self, target_address: SocketAddrV4) -> anyhow::Result<reqwest::Request> {
+        let mut url = Url::parse(&format!("http://{}{}", target_address, self.path))?;
 
-    fn try_from(request_in: Request) -> anyhow::Result<Self> {
-        // TODO: make the target destination a config variable
-        let mut url = Url::parse(&format!("http://localhost:9002{}", request_in.path))?;
+        url.set_query(self.query.as_deref());
 
-        url.set_query(request_in.query.as_deref());
-
-        let mut request_out = reqwest::Request::new(request_in.method, url);
-        *request_out.headers_mut() = request_in.headers;
+        let mut request_out = reqwest::Request::new(self.method, url);
+        *request_out.headers_mut() = self.headers;
 
         Ok(request_out)
     }
