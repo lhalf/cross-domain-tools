@@ -1,7 +1,7 @@
 use axum::Router;
 use axum::extract::Request;
 use axum::extract::State;
-use axum::http::StatusCode;
+use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{any, get};
 use std::net::TcpStream;
 use std::sync::Mutex;
@@ -51,10 +51,17 @@ impl Server {
         Router::new()
             .route("/is_ready", get(|| async {}))
             .route("/teapot", get(|| async { StatusCode::IM_A_TEAPOT }))
+            .route("/headers", get(Self::header_endpoint))
             .route(
                 "/{*path}",
                 any(Self::default_endpoint).with_state(received_requests.clone()),
             )
+    }
+
+    async fn header_endpoint() -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-target", "headers".parse().unwrap());
+        headers
     }
 
     #[allow(clippy::unused_async)]

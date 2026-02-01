@@ -8,7 +8,7 @@ use std::time::Duration;
 const TIMEOUT: Duration = Duration::from_secs(2);
 
 #[test]
-fn proxy_response() {
+fn proxy_response_status_code() {
     let _system = System::start();
 
     let response = client()
@@ -17,6 +17,18 @@ fn proxy_response() {
         .unwrap();
 
     assert_eq!(StatusCode::IM_A_TEAPOT, response.status());
+}
+
+#[test]
+fn proxy_response_headers() {
+    let _system = System::start();
+
+    let response = client()
+        .get(format!("http://{SENDER_ADDRESS}/headers"))
+        .send()
+        .unwrap();
+
+    assert_eq!("headers", response.headers().get("x-target").unwrap());
 }
 
 #[parameterized(method = {
@@ -28,7 +40,7 @@ fn proxy_response() {
     Method::PATCH,
     Method::TRACE,
 })]
-fn proxy_method(method: Method) {
+fn proxy_request_method(method: Method) {
     let system = System::start();
 
     let response = client()
