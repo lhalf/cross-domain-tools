@@ -95,6 +95,24 @@ fn proxy_headers() {
     );
 }
 
+#[test]
+fn proxy_query() {
+    let system = System::start();
+
+    let response = client()
+        .get(format!("http://{SENDER_ADDRESS}/path?foo=bar"))
+        .send()
+        .unwrap();
+
+    assert_eq!(StatusCode::OK, response.status());
+
+    assert_eq!(1, system.server.received_requests().len());
+    assert_eq!(
+        Some("foo=bar"),
+        system.server.received_requests()[0].uri().query()
+    );
+}
+
 pub fn client() -> reqwest::blocking::Client {
     reqwest::blocking::ClientBuilder::new()
         .timeout(TIMEOUT)

@@ -9,6 +9,7 @@ pub struct Request {
     pub path: String,
     #[serde(with = "http_serde::header_map")]
     pub headers: HeaderMap,
+    pub query: Option<String>,
 }
 
 impl<S: Sync> axum::extract::FromRequest<S> for Request {
@@ -22,6 +23,7 @@ impl<S: Sync> axum::extract::FromRequest<S> for Request {
             method: request.method().clone(),
             path: request.uri().path().to_string(),
             headers: request.headers().clone(),
+            query: request.uri().query().map(ToString::to_string),
         })
     }
 }
@@ -31,11 +33,11 @@ impl TryFrom<Request> for reqwest::Request {
 
     fn try_from(request_in: Request) -> anyhow::Result<Self> {
         // TODO: make the target destination a config variable
-        let mut request_out = Self::new(
-            request_in.method,
-            Url::parse(&format!("http://localhost:9002{}", request_in.path))?,
-        );
+        let mut url = Url::parse(&format!("http://localhost:9002{}", request_in.path))?;
 
+        url.set_query(request_in.query.as_deref());
+
+        let mut request_out = reqwest::Request::new(request_in.method, url);
         *request_out.headers_mut() = request_in.headers;
 
         Ok(request_out)
