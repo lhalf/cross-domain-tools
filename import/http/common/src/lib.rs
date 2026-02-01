@@ -1,4 +1,3 @@
-pub mod method;
 pub mod payload;
 pub mod request;
 pub mod response;
