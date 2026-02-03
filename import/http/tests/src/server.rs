@@ -76,7 +76,9 @@ impl Server {
 
     async fn read_request(request: Request) -> Request<Bytes> {
         let (parts, body) = request.into_parts();
-        let bytes = axum::body::to_bytes(body, REQUEST_BODY_LIMIT).await.unwrap();
+        let bytes = axum::body::to_bytes(body, REQUEST_BODY_LIMIT)
+            .await
+            .unwrap();
         Request::from_parts(parts, bytes)
     }
 
