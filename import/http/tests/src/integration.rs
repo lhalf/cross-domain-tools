@@ -125,6 +125,25 @@ fn proxy_query() {
     );
 }
 
+#[test]
+fn proxy_json_body() {
+    let system = System::start();
+
+    let response = client()
+        .get(format!("http://{SENDER_ADDRESS}/path"))
+        .body(r#"{"foo":"bar"}"#) // test hangs when this is here?
+        .send()
+        .unwrap();
+
+    assert_eq!(StatusCode::OK, response.status());
+
+    assert_eq!(1, system.server.received_requests().len());
+    assert_eq!(
+        br#"{"foo":"bar"}"#.as_slice(),
+        system.server.received_requests()[0].body()
+    );
+}
+
 pub fn client() -> reqwest::blocking::Client {
     reqwest::blocking::ClientBuilder::new()
         .timeout(TIMEOUT)

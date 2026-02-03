@@ -1,9 +1,10 @@
+use crate::body::Body;
 use axum::http::{HeaderMap, Method, StatusCode};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddrV4;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Request {
     #[serde(with = "http_serde::method")]
     pub method: Method,
@@ -11,6 +12,7 @@ pub struct Request {
     #[serde(with = "http_serde::header_map")]
     pub headers: HeaderMap,
     pub query: Option<String>,
+    pub body: Body,
 }
 
 impl<S: Sync> axum::extract::FromRequest<S> for Request {
@@ -25,6 +27,7 @@ impl<S: Sync> axum::extract::FromRequest<S> for Request {
             path: request.uri().path().to_string(),
             headers: request.headers().clone(),
             query: request.uri().query().map(ToString::to_string),
+            body: Body::try_from(request.into_body()).await?,
         })
     }
 }
@@ -37,6 +40,7 @@ impl Request {
 
         let mut request_out = reqwest::Request::new(self.method, url);
         *request_out.headers_mut() = self.headers;
+        *request_out.body_mut() = self.body.into();
 
         Ok(request_out)
     }

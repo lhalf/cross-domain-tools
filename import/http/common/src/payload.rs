@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[cfg_attr(feature = "test", derive(Default))]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ImportPayload {
     pub uuid: Uuid,
     pub request: Request,

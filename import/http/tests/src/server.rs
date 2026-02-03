@@ -1,4 +1,5 @@
 use axum::Router;
+use axum::body::Bytes;
 use axum::extract::Request;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
@@ -11,11 +12,12 @@ use tokio::runtime::Runtime;
 use tokio::sync::oneshot;
 
 const ADDRESS: &str = "127.0.0.1:9002";
+const REQUEST_BODY_LIMIT: usize = 1024;
 
 pub struct Server {
     stop_tx: Option<oneshot::Sender<()>>,
     handle: Option<JoinHandle<()>>,
-    received_requests: Arc<Mutex<Vec<Request>>>,
+    received_requests: Arc<Mutex<Vec<Request<Bytes>>>>,
 }
 
 impl Server {
@@ -34,7 +36,7 @@ impl Server {
         }
     }
 
-    fn serve(stop_rx: oneshot::Receiver<()>, received_requests: &Arc<Mutex<Vec<Request>>>) {
+    fn serve(stop_rx: oneshot::Receiver<()>, received_requests: &Arc<Mutex<Vec<Request<Bytes>>>>) {
         Runtime::new().unwrap().block_on(async {
             let listener = tokio::net::TcpListener::bind(ADDRESS).await.unwrap();
 
@@ -47,7 +49,7 @@ impl Server {
         });
     }
 
-    fn router(received_requests: &Arc<Mutex<Vec<Request>>>) -> Router {
+    fn router(received_requests: &Arc<Mutex<Vec<Request<Bytes>>>>) -> Router {
         Router::new()
             .route("/is_ready", get(|| async {}))
             .route("/teapot", get(|| async { StatusCode::IM_A_TEAPOT }))
@@ -64,15 +66,21 @@ impl Server {
         headers
     }
 
-    #[allow(clippy::unused_async)]
     async fn default_endpoint(
-        State(received_requests): State<Arc<Mutex<Vec<Request>>>>,
+        State(received_requests): State<Arc<Mutex<Vec<Request<Bytes>>>>>,
         request: Request,
     ) {
-        received_requests.lock().unwrap().push(request);
+        let request = Self::read_request(request).await;
+        received_requests.lock().unwrap().push(request)
     }
 
-    pub fn received_requests(&self) -> MutexGuard<'_, Vec<Request>> {
+    async fn read_request(request: Request) -> Request<Bytes> {
+        let (parts, body) = request.into_parts();
+        let bytes = axum::body::to_bytes(body, REQUEST_BODY_LIMIT).await.unwrap();
+        Request::from_parts(parts, bytes)
+    }
+
+    pub fn received_requests(&self) -> MutexGuard<'_, Vec<Request<Bytes>>> {
         self.received_requests.lock().unwrap()
     }
 
