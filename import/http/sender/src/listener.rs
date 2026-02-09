@@ -2,19 +2,32 @@ use crate::config::Config;
 use crate::responses::{ReceiveResponse, ResponseMap};
 use common::W6300_BUFFER_SIZE;
 use common::payload::ExportPayload;
+use tokio_util::sync::CancellationToken;
 
-pub async fn run(config: Config, response_map: ResponseMap) -> anyhow::Result<()> {
+pub async fn run(
+    config: Config,
+    response_map: ResponseMap,
+    shutdown_token: CancellationToken,
+) -> anyhow::Result<()> {
     let listener = tokio::net::UdpSocket::bind(config.export_address).await?;
 
     #[allow(clippy::large_stack_arrays)]
     let mut buffer = [0u8; W6300_BUFFER_SIZE];
 
     loop {
-        let (len, _) = listener.recv_from(&mut buffer).await?;
-        // TODO: fix this shit
-        let data = buffer[..len].to_vec();
+        tokio::select! {
+            () = shutdown_token.cancelled() => {
+                log::info!("listener shut down");
+                return Ok(());
+            }
+            result = listener.recv_from(&mut buffer) => {
+                let (len, _) = result?;
+                // TODO: fix this shit
+                let data = buffer[..len].to_vec();
 
-        tokio::spawn(on_response_received(data, response_map.clone()));
+                tokio::spawn(on_response_received(data, response_map.clone()));
+            }
+        }
     }
 }
 

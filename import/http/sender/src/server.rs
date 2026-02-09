@@ -7,9 +7,14 @@ use common::request::Request;
 use common::response::Response;
 use common::udp::{SendBytes, UdpSender};
 use std::time::Duration;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
-pub async fn run(config: Config, response_map: ResponseMap) -> anyhow::Result<()> {
+pub async fn run(
+    config: Config,
+    response_map: ResponseMap,
+    shutdown_token: CancellationToken,
+) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(config.listen_address).await?;
 
     let udp_sender = UdpSender::try_new(config.import_address).await?;
@@ -23,8 +28,12 @@ pub async fn run(config: Config, response_map: ResponseMap) -> anyhow::Result<()
         )
         .await,
     )
+    .with_graceful_shutdown(shutdown_token.cancelled_owned())
     .await
-    .context("failed to run request server")
+    .context("failed to run request server")?;
+
+    log::info!("server shut down");
+    Ok(())
 }
 
 #[derive(Clone)]

@@ -15,6 +15,7 @@ pub struct Config {
 impl Config {
     pub fn try_load() -> anyhow::Result<Self> {
         let path = std::env::var("CONFIG_PATH").unwrap_or_else(|_| DEFAULT_PATH.to_string());
-        toml::from_str(&std::fs::read_to_string(path)?).context("failed to load config")
+        toml::from_str(&std::fs::read_to_string(path).context("failed to load config")?)
+            .context("config is invalid")
     }
 }
