@@ -8,4 +8,4 @@ Tools for building cross-domain solutions.
 ## Applications
 
 - [import-http](import/http)
-- [import-grpc](import)
+- [import-grpc](import/grpc)

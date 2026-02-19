@@ -1,6 +1,6 @@
 use crate::config::Config;
-use common::request::Request;
-use common::response::Response;
+use import_http_common::request::Request;
+use import_http_common::response::Response;
 use std::net::SocketAddrV4;
 use std::time::Duration;
 

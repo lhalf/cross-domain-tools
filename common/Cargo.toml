@@ -1,0 +1,21 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+test = false
+doctest = false
+
+[features]
+test = ["dep:autospy"]
+
+[dependencies]
+tokio = { workspace = true, features = ["net"] }
+anyhow = { workspace = true }
+async-trait = { version = "0.1.89", default-features = false }
+autospy = { version = "1.6.1", default-features = false, optional = true }
+
+
+[lints]
+workspace = true

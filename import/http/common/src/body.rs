@@ -1,5 +1,5 @@
-use crate::W6300_BUFFER_SIZE;
 use axum::http::StatusCode;
+use common::BUFFER_SIZE;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -11,7 +11,7 @@ pub enum Body {
 
 impl Body {
     pub async fn try_from(body_in: axum::body::Body) -> Result<Self, StatusCode> {
-        let bytes = axum::body::to_bytes(body_in, W6300_BUFFER_SIZE)
+        let bytes = axum::body::to_bytes(body_in, BUFFER_SIZE)
             .await
             .or(Err(StatusCode::PAYLOAD_TOO_LARGE))?;
 

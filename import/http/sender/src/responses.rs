@@ -1,4 +1,4 @@
-use common::response::Response;
+use import_http_common::response::Response;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;

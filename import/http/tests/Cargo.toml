@@ -1,12 +1,12 @@
 [package]
-name = "tests"
+name = "import-http-tests"
 version = "0.1.0"
 edition = "2024"
 
 [dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "net"] }
 reqwest = { version = "0.13.1", default-features = false, features = ["blocking"] }
 axum = { version = "0.8.8", default-features = false, features = ["tokio", "http1"] }
-tokio = { version = "1.49.0", default-features = false, features = ["rt-multi-thread", "net"] }
 retry = { version = "2.1.0", default-features = false }
 parameterized = { version = "2.1.0", default-features = false }
 

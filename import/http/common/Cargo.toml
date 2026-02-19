@@ -1,5 +1,5 @@
 [package]
-name = "common"
+name = "import-http-common"
 version = "0.1.0"
 edition = "2024"
 
@@ -8,19 +8,19 @@ test = false
 doctest = false
 
 [features]
-test = ["dep:autospy"]
+test = []
 
 [dependencies]
-tokio = { version = "1.49.0", default-features = false, features = ["net"]}
-serde = { version = "1.0.228", default-features = false, features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
+uuid = { workspace = true, features = ["v4", "serde"] }
 serde_json = { version = "1.0.149", default-features = false, features = ["std"] }
 axum = { version = "0.8.8", default-features = false, features = ["tokio", "http1"] }
 reqwest = { version = "0.13.1", default-features = false }
 anyhow = { version = "1.0.100", default-features = false }
-uuid = { version = "1.20.0", default-features = false, features = ["v4", "serde"] }
-async-trait = { version = "0.1.89", default-features = false }
 http-serde = { version = "2.1.1", default-features = false }
-autospy = { version = "1.6.1", default-features = false, optional = true }
+
+[dependencies.common]
+path = "../../../common"
 
 [lints]
 workspace = true

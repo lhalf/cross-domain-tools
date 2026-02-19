@@ -1,9 +1,9 @@
 use crate::config::Config;
 use crate::send_request::{HTTPClient, SendRequest};
-use common::W6300_BUFFER_SIZE;
-use common::payload::{ExportPayload, ImportPayload};
+use common::BUFFER_SIZE;
 use common::udp::SendBytes;
 use common::udp::UdpSender;
+use import_http_common::payload::{ExportPayload, ImportPayload};
 
 pub async fn run(config: &Config) -> anyhow::Result<()> {
     let listener = tokio::net::UdpSocket::bind(config.import_address).await?;
@@ -11,7 +11,7 @@ pub async fn run(config: &Config) -> anyhow::Result<()> {
     let udp_sender = UdpSender::try_new(config.export_address).await?;
 
     #[allow(clippy::large_stack_arrays)]
-    let mut buffer = [0u8; W6300_BUFFER_SIZE];
+    let mut buffer = [0u8; BUFFER_SIZE];
 
     loop {
         let (len, _) = listener.recv_from(&mut buffer).await?;
@@ -54,9 +54,9 @@ mod tests {
     use super::on_request_received;
     use crate::send_request::SendRequestSpy;
     use anyhow::anyhow;
-    use common::payload::ImportPayload;
-    use common::response::Response;
     use common::udp::SendBytesSpy;
+    use import_http_common::payload::ImportPayload;
+    use import_http_common::response::Response;
 
     #[tokio::test]
     async fn receiving_invalid_request_bytes_returns_error() {

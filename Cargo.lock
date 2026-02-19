@@ -151,13 +151,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "autospy",
- "axum",
- "http-serde",
- "reqwest",
- "serde",
- "serde_json",
  "tokio",
- "uuid",
 ]
 
 [[package]]
@@ -546,6 +540,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "import-http-common"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "common",
+ "http-serde",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "import-http-receiver"
 version = "0.1.0"
 dependencies = [
@@ -554,6 +562,7 @@ dependencies = [
  "autospy",
  "common",
  "env_logger",
+ "import-http-common",
  "log",
  "postcard",
  "reqwest",
@@ -572,6 +581,7 @@ dependencies = [
  "axum",
  "common",
  "env_logger",
+ "import-http-common",
  "log",
  "postcard",
  "serde",
@@ -580,6 +590,17 @@ dependencies = [
  "toml",
  "tower",
  "uuid",
+]
+
+[[package]]
+name = "import-http-tests"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "parameterized",
+ "reqwest",
+ "retry",
+ "tokio",
 ]
 
 [[package]]
@@ -930,17 +951,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "tests"
-version = "0.1.0"
-dependencies = [
- "axum",
- "parameterized",
- "reqwest",
- "retry",
- "tokio",
 ]
 
 [[package]]
