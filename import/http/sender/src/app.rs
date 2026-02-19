@@ -1,21 +1,18 @@
 use crate::config::Config;
 use crate::responses::ResponseMap;
 use crate::{listener, server};
-use tokio::task::JoinSet;
 use tokio_util::sync::CancellationToken;
+use tokio_util::task::task_tracker::TaskTracker;
 
 pub async fn run() -> anyhow::Result<()> {
     let config = Config::try_load()?;
     let shutdown_token = CancellationToken::new();
-    let mut tasks = spawn_tasks(config, &shutdown_token).await;
-    wait_for_shutdown(&mut tasks, &shutdown_token).await
+    let tasks = spawn_tasks(config, &shutdown_token).await;
+    wait_for_shutdown(tasks, &shutdown_token).await
 }
 
-async fn spawn_tasks(
-    config: Config,
-    shutdown_token: &CancellationToken,
-) -> JoinSet<anyhow::Result<()>> {
-    let mut tasks = JoinSet::new();
+async fn spawn_tasks(config: Config, shutdown_token: &CancellationToken) -> TaskTracker {
+    let tasks = TaskTracker::new();
 
     let response_map = ResponseMap::default();
 
@@ -30,18 +27,13 @@ async fn spawn_tasks(
 }
 
 async fn wait_for_shutdown(
-    tasks: &mut JoinSet<anyhow::Result<()>>,
+    tasks: TaskTracker,
     shutdown_token: &CancellationToken,
 ) -> anyhow::Result<()> {
     tokio::signal::ctrl_c().await?;
-
     log::info!("received shutdown signal, shutting down...");
-
     shutdown_token.cancel();
-
-    while let Some(result) = tasks.join_next().await {
-        let _ = result?;
-    }
-
+    tasks.close();
+    tasks.wait().await;
     Ok(())
 }
