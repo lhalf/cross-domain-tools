@@ -552,6 +552,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "import-grpc-receiver"
+version = "0.1.0"
+
+[[package]]
+name = "import-grpc-sender"
+version = "0.1.0"
+
+[[package]]
 name = "import-http-common"
 version = "0.1.0"
 dependencies = [
