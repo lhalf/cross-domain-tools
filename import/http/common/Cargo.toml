@@ -13,10 +13,10 @@ test = []
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 uuid = { workspace = true, features = ["v4", "serde"] }
-serde_json = { version = "1.0.149", default-features = false, features = ["std"] }
-axum = { version = "0.8.8", default-features = false, features = ["tokio", "http1"] }
-reqwest = { version = "0.13.1", default-features = false }
-anyhow = { version = "1.0.100", default-features = false }
+serde_json = { version = "1.0.150", default-features = false, features = ["std"] }
+axum = { version = "0.8.9", default-features = false, features = ["tokio", "http1"] }
+reqwest = { version = "0.13.4", default-features = false }
+anyhow = { version = "1.0.103", default-features = false }
 http-serde = { version = "2.1.1", default-features = false }
 
 [dependencies.common]

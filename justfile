@@ -1,5 +1,7 @@
 set shell := ["bash", "-euc"]
 
+pre-commit: fmt check
+
 fmt:
     cargo fmt --all
 
@@ -20,3 +22,6 @@ integration-test: build
 
 build:
     cargo build --release --workspace --exclude common --exclude import-http-common --exclude import-http-tests
+
+update:
+    cargo upgrade --incompatible
